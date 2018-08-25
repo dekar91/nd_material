@@ -58,44 +58,43 @@ public class ArticleListActivity extends AppCompatActivity implements
     // Use default locale format
     private SimpleDateFormat outputFormat = new SimpleDateFormat();
     // Most time functions can only handle 1902 - 2037
-    private GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2,1,1);
+    private GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2, 1, 1);
 
     private final SharedElementCallback mCallback = new SharedElementCallback() {
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @Override
         public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
-                if (mTempReturnState != null) {
-                    int prePosition = mTempReturnState.getInt(PRE_TRANSITION_POSITION);
-                    int postPosition = mTempReturnState.getInt(POST_TRANSITION_POSITION);
-                    if (prePosition != postPosition) {
-                        String updateTransitionName = getString(R.string.transition_picture) + postPosition;
-                        View newSharedElement = mRecyclerView.findViewWithTag(updateTransitionName);
-                        if (newSharedElement != null) {
-                            names.clear();
-                            names.add(updateTransitionName);
-                            sharedElements.clear();
-                            sharedElements.put(updateTransitionName, newSharedElement);
-                        }
-                    }
-
-                    mTempReturnState = null;
-
-                }else {
-                        // If mTmpReenterState is null, then the activity is exiting.
-                        View navigationBar = findViewById(android.R.id.navigationBarBackground);
-                        View statusBar = findViewById(android.R.id.statusBarBackground);
-                        if (navigationBar != null) {
-                            names.add(navigationBar.getTransitionName());
-                            sharedElements.put(navigationBar.getTransitionName(), navigationBar);
-                        }
-                        if (statusBar != null) {
-                            names.add(statusBar.getTransitionName());
-                            sharedElements.put(statusBar.getTransitionName(), statusBar);
-                        }
+            if (mTempReturnState != null) {
+                int prePosition = mTempReturnState.getInt(PRE_TRANSITION_POSITION);
+                int postPosition = mTempReturnState.getInt(POST_TRANSITION_POSITION);
+                if (prePosition != postPosition) {
+                    String updateTransitionName = getString(R.string.transition_picture) + postPosition;
+                    View newSharedElement = mRecyclerView.findViewWithTag(updateTransitionName);
+                    if (newSharedElement != null) {
+                        names.clear();
+                        names.add(updateTransitionName);
+                        sharedElements.clear();
+                        sharedElements.put(updateTransitionName, newSharedElement);
                     }
                 }
-        };
 
+                mTempReturnState = null;
+
+            } else {
+                // If mTmpReenterState is null, then the activity is exiting.
+                View navigationBar = findViewById(android.R.id.navigationBarBackground);
+                View statusBar = findViewById(android.R.id.statusBarBackground);
+                if (navigationBar != null) {
+                    names.add(navigationBar.getTransitionName());
+                    sharedElements.put(navigationBar.getTransitionName(), navigationBar);
+                }
+                if (statusBar != null) {
+                    names.add(statusBar.getTransitionName());
+                    sharedElements.put(statusBar.getTransitionName(), statusBar);
+                }
+            }
+        }
+    };
 
 
     @Override
@@ -139,7 +138,7 @@ public class ArticleListActivity extends AppCompatActivity implements
         mTempReturnState = new Bundle(data.getExtras());
         int prePosition = mTempReturnState.getInt(PRE_TRANSITION_POSITION);
         int postPosition = mTempReturnState.getInt(POST_TRANSITION_POSITION);
-        if(prePosition != postPosition){
+        if (prePosition != postPosition) {
             mRecyclerView.scrollToPosition(postPosition);
         }
         ActivityCompat.postponeEnterTransition(this);
@@ -223,12 +222,12 @@ public class ArticleListActivity extends AppCompatActivity implements
                                         vh.thumbnailView,
                                         vh.thumbnailView.getTransitionName()).toBundle();
 
-                        Log.d(TAG,"GET transition NameId: " + mPosition);
+                        Log.d(TAG, "GET transition NameId: " + mPosition);
                         startActivity(intent, bundle);
                     } else {
                         startActivity(intent);
                     }
-                    }
+                }
             });
             return vh;
         }
@@ -262,8 +261,8 @@ public class ArticleListActivity extends AppCompatActivity implements
             } else {
                 holder.subtitleView.setText(Html.fromHtml(
                         outputFormat.format(publishedDate)
-                        + "<br/>" + " by "
-                        + mCursor.getString(ArticleLoader.Query.AUTHOR)));
+                                + "<br/>" + " by "
+                                + mCursor.getString(ArticleLoader.Query.AUTHOR)));
             }
             holder.thumbnailView.setImageUrl(
                     mCursor.getString(ArticleLoader.Query.THUMB_URL),

@@ -59,12 +59,12 @@ public class ArticleDetailActivity extends AppCompatActivity
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @Override
         public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
-            if(mIsReturning){
+            if (mIsReturning) {
                 ImageView sharedElement = mCurrentDetailsFragment.getPhotoView();
-                if(sharedElement == null){
+                if (sharedElement == null) {
                     names.clear();
                     sharedElements.clear();
-                } else if (mPrePosition != mPostPosition){
+                } else if (mPrePosition != mPostPosition) {
                     names.clear();
                     names.add(sharedElement.getTransitionName());
                     sharedElements.clear();
@@ -90,7 +90,7 @@ public class ArticleDetailActivity extends AppCompatActivity
         setEnterSharedElementCallback(mCallback);
 
         mPrePosition = getIntent().getIntExtra(PRE_TRANSITION_POSITION, 0);
-        if(savedInstanceState == null){
+        if (savedInstanceState == null) {
             mPostPosition = mPrePosition;
         } else {
             mPostPosition = savedInstanceState.getInt(STATE_CURRENT_PAGE_POSITION);
@@ -202,8 +202,8 @@ public class ArticleDetailActivity extends AppCompatActivity
         }
 
         Intent intent = getIntent();
-        if(intent.hasExtra(ArticleListActivity.PRE_TRANSITION_POSITION)){
-            mPostPosition = intent.getIntExtra(ArticleListActivity.PRE_TRANSITION_POSITION,0);
+        if (intent.hasExtra(ArticleListActivity.PRE_TRANSITION_POSITION)) {
+            mPostPosition = intent.getIntExtra(ArticleListActivity.PRE_TRANSITION_POSITION, 0);
             mPager.setCurrentItem(mPostPosition, false);
         }
     }
@@ -239,13 +239,13 @@ public class ArticleDetailActivity extends AppCompatActivity
                 mSelectedItemUpButtonFloor = fragment.getUpButtonFloor();
                 updateUpButtonPosition();
             }
-            mCurrentDetailsFragment = (ArticleDetailFragment)object;
+            mCurrentDetailsFragment = (ArticleDetailFragment) object;
         }
 
         @Override
         public Fragment getItem(int position) {
             mCursor.moveToPosition(position);
-            return ArticleDetailFragment.newInstance(mCursor.getLong(ArticleLoader.Query._ID),position, mPrePosition);
+            return ArticleDetailFragment.newInstance(mCursor.getLong(ArticleLoader.Query._ID), position, mPrePosition);
         }
 
         @Override
