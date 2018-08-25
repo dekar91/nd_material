@@ -16,7 +16,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ShareCompat;
 import android.support.v7.graphics.Palette;
 import android.text.Html;
@@ -26,6 +30,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -44,10 +49,14 @@ public class ArticleDetailFragment extends Fragment implements
     private static final String TAG = "ArticleDetailFragment";
 
     public static final String ARG_ITEM_ID = "item_id";
+    public static final String ARG_TRANSITION_POSITION = "trans_position";
+    public static final String ARG_STARTING_TRANSITION_POSITION = "starting_position";
     private static final float PARALLAX_FACTOR = 1.25f;
 
     private Cursor mCursor;
     private long mItemId;
+    private int mTransitionPosition;
+    private int mStartingTransitionPosition;
     private View mRootView;
     private int mMutedColor = 0xFF333333;
     private ObservableScrollView mScrollView;
@@ -74,9 +83,11 @@ public class ArticleDetailFragment extends Fragment implements
     public ArticleDetailFragment() {
     }
 
-    public static ArticleDetailFragment newInstance(long itemId) {
+    public static ArticleDetailFragment newInstance(long itemId, int position, int startingPosition) {
         Bundle arguments = new Bundle();
         arguments.putLong(ARG_ITEM_ID, itemId);
+        arguments.putInt(ARG_TRANSITION_POSITION,position);
+        arguments.putInt(ARG_STARTING_TRANSITION_POSITION, startingPosition);
         ArticleDetailFragment fragment = new ArticleDetailFragment();
         fragment.setArguments(arguments);
         return fragment;
@@ -89,6 +100,9 @@ public class ArticleDetailFragment extends Fragment implements
         if (getArguments().containsKey(ARG_ITEM_ID)) {
             mItemId = getArguments().getLong(ARG_ITEM_ID);
         }
+
+        mTransitionPosition = getArguments().getInt(ARG_TRANSITION_POSITION);
+        mStartingTransitionPosition = getArguments().getInt(ARG_STARTING_TRANSITION_POSITION);
 
         mIsCard = getResources().getBoolean(R.bool.detail_is_card);
         mStatusBarFullOpacityBottom = getResources().getDimensionPixelSize(
@@ -136,6 +150,10 @@ public class ArticleDetailFragment extends Fragment implements
         });
 
         mPhotoView = (ImageView) mRootView.findViewById(R.id.photo);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mPhotoView.setTransitionName(getString(R.string.transition_picture) + mTransitionPosition);
+            mPhotoView.setTag(getString(R.string.transition_picture) + mTransitionPosition);
+        }
         mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
 
         mStatusBarColorDrawable = new ColorDrawable(0);
@@ -195,6 +213,20 @@ public class ArticleDetailFragment extends Fragment implements
         }
     }
 
+    private void scheduleStartPostponedTransition(){
+        if(mTransitionPosition == mStartingTransitionPosition) {
+            mPhotoView.getViewTreeObserver().addOnPreDrawListener(
+                    new ViewTreeObserver.OnPreDrawListener() {
+                        @Override
+                        public boolean onPreDraw() {
+                            mPhotoView.getViewTreeObserver().removeOnPreDrawListener(this);
+                            ActivityCompat.startPostponedEnterTransition(getActivity());
+                            return true;
+                        }
+                    });
+        }
+    }
+
     private void bindViews() {
         if (mRootView == null) {
             return;
@@ -229,10 +261,11 @@ public class ArticleDetailFragment extends Fragment implements
                 bylineView.setText(Html.fromHtml(
                         outputFormat.format(publishedDate) + " by <font color='#ffffff'>"
                         + mCursor.getString(ArticleLoader.Query.AUTHOR)
-                                + "</font>"));
+                                + "</font>", Html.FROM_HTML_MODE_LEGACY));
 
             }
-            bodyView.setText(Html.fromHtml(mCursor.getString(ArticleLoader.Query.BODY).replaceAll("(\r\n|\n)", "<br />")));
+            bodyView.setText(Html.fromHtml(mCursor.getString(ArticleLoader.Query.BODY)));
+
             ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
                     .get(mCursor.getString(ArticleLoader.Query.PHOTO_URL), new ImageLoader.ImageListener() {
                         @Override
@@ -246,6 +279,8 @@ public class ArticleDetailFragment extends Fragment implements
                                         .setBackgroundColor(mMutedColor);
                                 updateStatusBar();
                             }
+                            scheduleStartPostponedTransition();
+
                         }
 
                         @Override
@@ -261,6 +296,20 @@ public class ArticleDetailFragment extends Fragment implements
         }
     }
 
+    @Nullable
+    ImageView getPhotoView(){
+        if(isViewInBounds(getActivity().getWindow().getDecorView(), mPhotoView)){
+            return mPhotoView;
+        }
+        return null;
+    }
+
+    private static boolean isViewInBounds(@NonNull View container, @NonNull View view){
+        Rect containerBounds = new Rect();
+        container.getHitRect(containerBounds);
+        return view.getLocalVisibleRect(containerBounds);
+    }
+
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return ArticleLoader.newInstanceForItemId(getActivity(), mItemId);
@@ -268,6 +317,7 @@ public class ArticleDetailFragment extends Fragment implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+
         if (!isAdded()) {
             if (cursor != null) {
                 cursor.close();
