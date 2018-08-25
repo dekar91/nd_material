@@ -86,7 +86,7 @@ public class ArticleDetailActivity extends AppCompatActivity
 
         setContentView(R.layout.activity_article_detail);
 
-        ActivityCompat.postponeEnterTransition(this);
+        android.support.v4.app.ActivityCompat.postponeEnterTransition(this);
         setEnterSharedElementCallback(mCallback);
 
         mPrePosition = getIntent().getIntExtra(PRE_TRANSITION_POSITION, 0);
